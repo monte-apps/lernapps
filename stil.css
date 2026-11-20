@@ -1,0 +1,17 @@
+* { box-sizing: border-box }
+:root { color: #202741; font: 100%/1.5 'Trebuchet MS',system-ui,sans-serif; background: #fafaff }
+body { margin: 0 }
+main { width: min(68rem, 90%); margin: 3rem auto 5rem }
+header { overflow: hidden; position: relative; isolation: isolate; background: #4642ba; color: white; padding: clamp(2rem,6vw,4rem); border-radius: 2rem }
+header::after { content: ""; position: absolute; z-index: -1; right: -4rem; top: -8rem; width: 19rem; height: 19rem; border: 2.7rem solid #a99df4; border-radius: 50%; box-shadow: 0 0 0 2.7rem #6b62d6 }
+h1 { margin: 0; font-size: clamp(3rem,8vw,6rem); line-height: 1.06; letter-spacing: -.065em }
+header p { margin: .7rem 0 0; font-size: 1.12rem }
+section { margin-top: 2rem }
+h2 { font-size: 1.4rem; margin: 0 0 .8rem }
+.grid { display: grid; grid-template-columns: repeat(var(--count,2),minmax(0,1fr)); gap: 1rem }
+.card { text-decoration: none; color: inherit; display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; gap: 1rem; padding: 1.3rem 1.6rem; border-radius: 1.3rem; background: var(--tone); border: 2px solid transparent; font-weight: 750; font-size: 1.65rem }
+.card:hover { border-color: currentColor }
+.icon { width: 3rem; height: 3rem; border-radius: 1rem; background: #ffffffaa; display: grid; place-items: center; font-size: 1.55rem }
+a:focus-visible { outline: 4px solid #262460; outline-offset: 4px }
+.back { display: inline-block; margin-bottom: 1rem; color: #393398; padding: .45rem 0 }
+@media(max-width:40rem) { main { margin-top: 1rem } .grid { grid-template-columns: 1fr } .card { flex-direction: row-reverse; align-items: center } header::after { right:-16rem } }
