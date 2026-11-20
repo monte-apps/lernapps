@@ -1,0 +1,252 @@
+<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Bakterienbremse</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f5ec;color:#193f36;font:16px/1.45 "Trebuchet MS",Arial,sans-serif}main{width:min(1100px,96%);margin:auto;padding:18px 0}header,nav,.bar,.meters,.metric,.foot,.brand{display:flex;align-items:center;gap:12px}header,.bar,.foot{justify-content:space-between}header{margin-bottom:15px}h1{font-size:clamp(24px,3.6vw,42px);line-height:1;margin:0;letter-spacing:-.055em}.logo{background:#195443;color:#e7ffac;border-radius:16px;width:52px;height:52px;display:grid;place-items:center}.brand small{display:block;font-weight:bold;color:#577468;letter-spacing:.09em;margin-bottom:3px}button{font:inherit;font-weight:bold;background:white;border:1px solid #b8cabe;color:#204d40;border-radius:12px;padding:10px 16px;cursor:pointer;min-height:44px;touch-action:manipulation}button:focus-visible,[role=button]:focus-visible{outline:4px solid #924ac0;outline-offset:2px}.start{background:#195443;color:white;border-color:#195443}section.board{border:1px solid #b6c7b8;border-radius:20px;background:white;overflow:hidden}.bar{padding:10px 18px;flex-wrap:wrap}.metric{gap:6px}.metric i{font-style:normal;color:#567062}.metric b{font-variant-numeric:tabular-nums}.meters{gap:22px}.clock{background:#f9e9bf;padding:5px 12px;border-radius:24px;font-weight:bold;color:#644712}.room{position:relative;background:#efd8b6}.room>svg{width:100%;display:block}.object{cursor:pointer}.object:hover .tag,.object:focus .tag{fill:#145440}.tag{fill:#294f44}.label{font:bold 15px Arial;fill:white;text-anchor:middle}.offOnly,.on .onOnly{display:block}.onOnly,.on .offOnly{display:none}.foot{padding:10px 17px;gap:8px;flex-wrap:wrap}.cool{font-weight:bold;color:#285f47}.hint{font-size:14px;color:#50645a}.progress{height:4px;background:#dce6cb}.progress i{display:block;height:100%;background:#679544;width:100%}dialog{color:inherit;border:1px solid #9fb6a3;border-radius:22px;padding:24px;width:min(440px,92vw);box-shadow:0 20px 60px #173c342b}dialog::backdrop{background:#142d296b}dialog h2{margin:0;font-size:28px;letter-spacing:-.04em}dialog p{margin:12px 0}dialog .score{font-size:40px;font-weight:bold;line-height:1;color:#246345}dialog button{margin-top:8px}.bug{cursor:crosshair}.pulse{animation:pulse .28s ease-out;transform-box:fill-box;transform-origin:center}@keyframes pulse{from{scale:.65}to{scale:1}}@media(max-width:750px){.meters{gap:9px}.metric i{display:none}header{flex-wrap:wrap}main{width:98%;padding:7px 0}.bar{padding:7px 10px}.logo{width:42px;height:42px}.foot{padding:8px}.brand small{font-size:10px}.hint{font-size:13px}}@media(orientation:landscape) and (max-height:850px){main{width:min(98%,calc((100dvh - 174px)*2.22));min-width:min(96%,660px);padding:6px 0}header{margin-bottom:7px}.logo{width:42px;height:42px}.bar,.foot{padding-block:6px}}@media(prefers-reduced-motion:reduce){.pulse{animation:none}}
+.signalHalo{animation:signalGlow .48s ease-in-out 2 alternate}
+@keyframes signalGlow{from{opacity:1}to{opacity:.42}}
+@media(prefers-reduced-motion:reduce){.signalHalo{animation:none}}
+#temp,#humid{border-radius:8px;padding:3px 8px;white-space:nowrap}
+[data-level="green"]{background:#d9edcf;color:#214e30}
+[data-level="yellow"]{background:#ffe594;color:#634800}
+[data-level="red"]{background:#ffd1ce;color:#7d2327}
+#resident .sweat,#resident .crossed{display:none}
+#resident[data-feel="hot"] .skin{fill:#ef8974}
+#resident[data-feel="hot"] .sweat,#resident[data-feel="cold"] .crossed{display:inline}
+#resident[data-feel="cold"] .relaxed{display:none}
+#mold{display:none;pointer-events:none}#mold[data-level="yellow"],#mold[data-level="red"]{display:inline}
+#mold[data-level="yellow"] use{transform:scale(.46);opacity:.42}
+#mold[data-level="red"] use{opacity:.8}
+#divisionStatus{border-radius:8px;padding:3px 8px}.ratebar{display:flex;gap:1em;align-items:center;flex-wrap:wrap;padding:5px 18px;font-size:14px;background:#eef5ea}
+</style><main><header><div class="brand"><span class="logo" aria-hidden="true"><svg width="37" height="37" viewBox="0 0 40 40"><g transform="rotate(-32 20 20)" stroke="currentColor" stroke-width="3"><rect x="5" y="12" width="30" height="16" rx="8" fill="none"/><path d="M12 12V8m8 4V7m8 5V9M13 28v4m8-4v5m8-6v4"/></g><circle cx="17" cy="20" r="2" fill="currentColor"/><circle cx="24" cy="18" r="2" fill="currentColor"/></svg></span><div><small>NATUR UND TECHNIK</small><h1>Bakterienbremse</h1></div></div><nav><button id="help">Spielhilfe</button><button id="start" class="start">Spiel starten</button></nav></header>
+<section class="board"><div class="bar"><div class="meters"><span class="metric" aria-label="Temperatur">🌡️ <i>Temperatur</i> <b id="temp"></b></span><span class="metric" aria-label="Luftfeuchtigkeit">💧 <i>Luftfeuchtigkeit</i> <b id="humid"></b></span></div><div class="meters"><span class="metric">Bakterien <b id="count">0</b></span><span class="clock" id="clock">60 s</span></div></div><div class="ratebar"><strong>Vermehrung:</strong> <strong id="divisionStatus"></strong></div><div class="progress"><i id="timebar"></i></div>
+<div class="room"><svg id="scene" viewBox="0 0 1000 450" aria-label="Wohnraum mit zwei Fenstern, Heizung und Esstisch"><defs><pattern id="wall" width="28" height="28" patternUnits="userSpaceOnUse"><rect width="28" height="28" fill="#f4e5c7"/><circle cx="14" cy="14" r="1.2" fill="#e3cfa9"/></pattern><pattern id="floor" width="160" height="26" patternUnits="userSpaceOnUse"><rect width="160" height="26" fill="#e8ad77"/><path d="M0 25h160M80 0v12M4 12v13" stroke="#cb8e61" fill="none"/></pattern><g id="view"><rect width="184" height="124" fill="#a7dedf"/><circle cx="146" cy="29" r="13" fill="#ffde87"/><path d="M0 84Q48 49 101 82T184 69V124H0" fill="#86bda0"/><path d="M0 98Q58 112 112 88T184 91V124H0" fill="#669d83"/></g><g id="bugArt" stroke="#1d5332" stroke-width="2"><path d="M-8-5l-2-4m9 3 1-4m6 5 3-3M-7 5l-2 4m9-3 2 4m5-5 3 2"/><rect x="-13" y="-7" width="26" height="14" rx="7" fill="#a4e454"/><path d="M-7 1q3-5 5-1t6-1" fill="none"/></g><g id="stain"><path d="M-29 2q-7-10 4-14 2-11 14-7 9-9 18 1 14-6 17 4 14 3 9 13 4 11-11 12-8 9-19 3-13 5-17-4-11 3-15-8Z" fill="#829273" opacity=".55"/><g fill="#536c55"><circle cx="-15" cy="-3" r="5"/><circle cx="4" cy="1" r="6"/><circle cx="14" cy="-6" r="4"/><circle cx="23" cy="5" r="2"/><circle cx="-5" cy="-12" r="3"/><circle cx="-9" cy="10" r="4"/><circle cx="-33" cy="8" r="2"/><circle cx="30" cy="-10" r="3"/></g></g></defs>
+<rect width="1000" height="450" fill="url(#wall)"/><rect y="302" width="1000" height="148" fill="url(#floor)"/><path d="M0 299h1000" stroke="#f9f0d8" stroke-width="12"/><ellipse cx="625" cy="406" rx="320" ry="32" fill="#d68b66"/><ellipse cx="625" cy="404" rx="304" ry="26" fill="#e7b180" stroke="#cb8565" stroke-width="3"/>
+<g id="mold" aria-hidden="true"><g transform="translate(20 24) rotate(-25)"><use href="#stain"/></g><g transform="translate(90 152) rotate(-6)"><use href="#stain"/></g><g transform="translate(365 17) rotate(13)"><use href="#stain"/></g><g transform="translate(531 151) rotate(-20)"><use href="#stain"/></g><g transform="translate(584 21) rotate(-1)"><use href="#stain"/></g><g transform="translate(874 110) rotate(18)"><use href="#stain"/></g><g transform="translate(973 33) rotate(-15)"><use href="#stain"/></g><g transform="translate(968 238) rotate(4)"><use href="#stain"/></g><g transform="translate(242 240) rotate(23)"><use href="#stain"/></g><g transform="translate(43 365) rotate(-10)"><use href="#stain"/></g><g transform="translate(212 429) rotate(9)"><use href="#stain"/></g><g transform="translate(467 389) rotate(-24)"><use href="#stain"/></g><g transform="translate(722 432) rotate(-5)"><use href="#stain"/></g><g transform="translate(959 376) rotate(14)"><use href="#stain"/></g></g><g aria-label="Verschütteter Saft"><title>Saftpfütze</title><ellipse cx="158" cy="383" rx="70" ry="20" fill="#e79530" stroke="#bc701e" stroke-width="2"/><path d="M115 383q10 8 32 9m21-20q15 0 20 3" fill="none" stroke="#ffe0a1" stroke-linecap="round" stroke-width="4"/><g transform="translate(90 363) rotate(24)"><path d="M-24-9l38-5v28l-38-5Z" fill="#b8d7d1" stroke="#638f8a" stroke-width="2"/><ellipse cx="14" rx="5" ry="14" fill="#9aaea1" stroke="#638f8a" stroke-width="2"/><path d="M12 4q4 0 6-5v8l-4 5Z" fill="#e79530"/></g></g>
+<g id="windows"></g><g transform="translate(495)"><path d="M0 0v62" stroke="#405b4c" stroke-width="4"/><ellipse cy="91" rx="43" ry="10" fill="#ffe8ac"/><path d="M-47 90q6-32 39-35v-7H8v7q33 4 39 35Z" fill="#db744c"/><path d="M-37 88q7-19 18-24" fill="none" stroke="#ec996f" stroke-width="5"/></g>
+<g id="heater" class="object" role="button" tabindex="0" aria-label="Heizung"><rect x="29" y="239" width="203" height="83" rx="8" fill="#b29076"/><rect x="23" y="232" width="201" height="82" rx="8" fill="#f8eee1" stroke="#bb9c83" stroke-width="3"/><path id="ribs" stroke="#d6bca4" stroke-width="7" stroke-linecap="round"/><path class="onOnly" d="M55 224q-9-10 0-20t0-19m29 39q-9-10 0-20t0-19" fill="none" stroke="#dd8452" stroke-width="4"/><rect class="tag" x="53" y="278" width="141" height="29" rx="14"/><text id="heatLabel" class="label" x="124" y="298"></text></g>
+<g fill="#719887" stroke="#547868" stroke-width="4"><rect x="393" y="228" width="72" height="84" rx="17"/><rect x="725" y="221" width="74" height="86" rx="17"/></g>
+<g id="resident" role="img" transform="translate(429 211)">
+<path d="M-31 62q0-37 9-42 8-6 22-6t22 6q10 7 10 42Z" fill="#57719c" stroke="#354e73" stroke-width="3"/>
+<path d="M-8 10v10q7 10 16 0V9" fill="#ce9271"/>
+<ellipse class="skin" cy="-9" rx="22" ry="27" fill="#e8b08b" stroke="#855c49" stroke-width="2"/>
+<path d="M-23-7q-7-18 4-29 9-11 24-6 21-2 21 20l-6 11-4-16q-11 10-29 9l-6 13Z" fill="#534338"/>
+<g fill="#342f32"><circle cx="-8" cy="-9" r="2.2"/><circle cx="8" cy="-9" r="2.2"/></g>
+<path id="mouth" fill="none" stroke="#713d3b" stroke-width="2.8" stroke-linecap="round"/>
+<g class="sweat" fill="#91d9ec" stroke="#39788a" stroke-width="1.4"><path d="M20-15q-7 8-2 10 6 2 2-10Zm7 12q-5 7-1 8 4 0 1-8Z"/></g>
+<g fill="none" stroke-linecap="round" stroke-width="10"><path class="relaxed" d="m-23 28-4 19 14 6m36-25 4 19-14 6" stroke="#7890b4"/><g class="crossed"><path d="m-23 26 4 15 32-12m10-3-5 15-31-12" stroke="#93afd0"/><path d="m11 29 4-2m-26 2-4-2" stroke="#e6ac87"/></g></g>
+<path class="crossed" d="m-34 22-3 5 3 4-3 5m71-14 3 5-3 4 3 5" stroke="#5283a4" stroke-width="2.5" fill="none"/>
+</g><path class="tablePart" d="M339 326l-6 77h14l12-76m447-1 13 76h14l-7-79" fill="#966044"/><path class="tablePart" d="m284 340-5 82h16l11-83m551-3 12 86h15l-7-86" fill="#845438"/><path class="tablePart" d="M328 262H812L898 331V348H264V332Z" fill="#a66742"/><path class="tablePart" d="M328 258H812L898 330Q900 335 890 336H269Q258 336 264 330Z" fill="#e2a063" stroke="#97623f" stroke-width="3"/><path d="M310 313h93m346-32h47m-371 42h97" stroke="#cb8954" stroke-width="3" stroke-linecap="round"/>
+<ellipse cx="595" cy="299" rx="76" ry="21" fill="#c98855"/><ellipse cx="595" cy="295" rx="76" ry="21" fill="#fcf9e9" stroke="#467c78" stroke-width="3"/><ellipse cx="595" cy="295" rx="58" ry="13" fill="#e5eee0"/><path d="m559 295 12-12 19 8-7 8Z" fill="#c78040"/><circle cx="609" cy="292" r="6" fill="#e57049"/><path d="m602 297 13 4 7-6m-33 1 5 3" stroke="#669358" stroke-width="4" fill="none"/>
+<g transform="translate(929 300)"><path d="M0 0q-37-42-26-62Q2-48 0 0m1-4q-1-53 24-61 6 27-24 61m-4-5q-32-15-34-35 26 0 34 35" fill="#658972"/><path d="M-22-5h44l-7 35h-31Z" fill="#d58159"/></g>
+<g id="bugs"></g><g id="signals" pointer-events="none" aria-hidden="true"></g></svg></div>
+<div class="foot"><span class="cool" id="ready">Ziel: möglichst wenige Bakterien</span><span class="hint">Gelber Ring (+) = Teilung · Roter Ring (−) = Verschwinden</span></div></section></main>
+<dialog id="modal"><h2 id="title"></h2><div id="message"></div><button class="start" id="close"></button> <button id="dismiss" hidden>Abbrechen</button></dialog>
+<script>
+const $=id=>document.getElementById(id), NS='http://www.w3.org/2000/svg';
+const windowArt=(x,i)=>`<g transform="translate(${x} 43)" id="win${i}" class="object" tabindex="0" role="button"><rect x="-8" y="-8" width="200" height="144" rx="5" fill="#bb9673"/><use href="#view"/><g stroke="#fcf8e7" fill="none" stroke-width="7"><rect width="184" height="124"/><path class="offOnly" d="M92 0v124M0 62h184"/><g class="onOnly"><path d="M0 0l29 12v98L0 124Zm184 0-29 12v98l29 14Z" fill="#b2d6c9"/></g></g><rect x="-13" y="126" width="210" height="9" rx="3" fill="#b07c56"/><rect x="13" y="141" width="158" height="28" rx="14" class="tag"/><text x="92" y="160" class="label" id="winLabel${i}"></text></g>`;
+$('windows').innerHTML=windowArt(171,0)+windowArt(648,1);
+$('ribs').setAttribute('d',Array.from({length:13},(_,i)=>'M'+(34+15*i)+' 242v59').join(' '));
+let state='idle', elapsed=0,last=0,step=0,nextTap=0,t=24,h=55,w=[false,false],heat=true, bugs=[],population=0,spawned=0,vanished=0,removed=0,splits=[0,0,0],warm=0,damp=0,paused=false,frameId=0;
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x)),rnd=(a,b)=>a+Math.random()*(b-a);
+const foodWeights=[-0.5,1.0,3.0];
+const tableParts=[...document.querySelectorAll('.tablePart')];
+const blockedAreas=[[158,35,368,212],[635,35,845,212],[22,183,233,323],[391,167,467,261]];
+function allowed(x,y){
+  return blockedAreas.every(([left,top,right,bottom])=>
+    x<left-23 || x>right+23 || y<top-23 || y>bottom+23);
+}
+function spawn(){
+  let x,y;
+  do {x=rnd(15,985);y=rnd(13,437)} while(!allowed(x,y));
+  add(x,y);
+}
+function divide(parent,amount){
+  let x=parent.x,y=parent.y;
+  for(let attempt=0;attempt<20;attempt++){
+    const angle=rnd(0,2*Math.PI),d=rnd(13,28);
+    const nx=clamp(parent.x+d*Math.cos(angle),15,985);
+    const ny=clamp(parent.y+d*Math.sin(angle),13,437);
+    if(allowed(nx,ny)){x=nx;y=ny;break}
+  }
+  add(x,y,amount);
+}
+function zone(x,y){
+  const onPlate=((x-595)/76)**2+((y-295)/21)**2<=1;
+  const inPuddle=((x-158)/70)**2+((y-383)/20)**2<=1;
+  if(onPlate||inPuddle)return 2;
+  if(y<302)return 0;
+  if(y<=423&&x>=263&&x<=900){
+    const point=new DOMPoint(x,y);
+    if(tableParts.some(part=>part.isPointInFill(point)))return 0;
+  }
+  return 1;
+}
+// Nearby bacteria in the same food zone share a drawing and independent event chances.
+const groups=new Map();
+const numbers=new Intl.NumberFormat('de-DE');
+function updateLabel(bug){
+  bug.label.textContent=bug.size>1?numbers.format(bug.size):'';
+}
+function add(x,y,amount=1){
+  const z=zone(x,y);
+  const key=[z,Math.floor(x/26),Math.floor(y/22)].join(',');
+  population+=amount;
+  const group=groups.get(key);
+  if(group){group.size+=amount;updateLabel(group);return}
+  const el=document.createElementNS(NS,'g'),r=rnd(-40,40);
+  el.setAttribute('transform',`translate(${x} ${y})`);el.setAttribute('class','bug');
+  el.innerHTML=`<circle r="22" fill="transparent"/><g transform="rotate(${r})"><use href="#bugArt" class="pulse"/></g><text y="21" text-anchor="middle" font-family="Arial" font-size="13" font-weight="bold" fill="#183f32" stroke="#fff" stroke-width="3" paint-order="stroke"></text>`;
+  $('bugs').append(el);
+  const bug={x,y,z,key,size:amount,pending:0,el,label:el.lastElementChild};
+  groups.set(key,bug);bugs.push(bug);updateLabel(bug);
+}
+function signalEvent(bug){
+  const loss=foodWeights[bug.z]<0;
+  const marker=document.createElementNS(NS,'g');
+  marker.setAttribute('transform',`translate(${bug.x} ${bug.y})`);
+  const color=loss?'#a92347':'#775200';
+  const light=loss?'#ffadc0':'#ffde43';
+  marker.innerHTML=`<g class="signalHalo"><circle r="21" fill="none" stroke="${color}" stroke-width="9"/><circle r="21" fill="none" stroke="${light}" stroke-width="5"/></g><circle cx="15" cy="-14" r="10" fill="${color}" stroke="#fff" stroke-width="2"/><path d="M10-14h10${loss?'':'m-5-5v10'}" fill="none" stroke="white" stroke-width="3"/>`;
+  $('signals').append(marker);bug.signal=marker;
+}
+function subtract(bug,amount){
+  population-=amount;bug.size-=amount;
+  if(bug.size){updateLabel(bug);return}
+  bug.signal?.remove();bug.el.remove();groups.delete(bug.key);bugs.splice(bugs.indexOf(bug),1);
+}
+function clearSignals(){
+  $('signals').replaceChildren();
+  for(const bug of bugs)bug.signal=null;
+}
+function controls(){w.forEach((v,i)=>{const el=$('win'+i);el.classList.toggle('on',v);el.setAttribute('aria-pressed',v);const s='Fenster '+(i+1)+' · '+(v?'offen':'zu');$('winLabel'+i).textContent=s;el.setAttribute('aria-label',s)});$('heater').classList.toggle('on',heat);$('heatLabel').textContent='Heizung · '+(heat?'an':'aus');$('heater').setAttribute('aria-pressed',heat)}
+function updateMeter(id,value,unit,level){
+  const meter=$(id);
+  meter.textContent=value+' '+unit;
+  meter.dataset.level=level;
+  meter.setAttribute('aria-label',meter.textContent+' – '+({green:'grüner Bereich',yellow:'Warnbereich',red:'kritischer Bereich'}[level]));
+}
+let lastMeterT,lastMeterH;
+function updateMeters(){
+  if(t===lastMeterT&&h===lastMeterH)return;
+  lastMeterT=t;lastMeterH=h;
+  const degrees=Math.round(t),percent=Math.round(h);
+  updateMeter('temp',degrees,'°C',degrees<16||degrees>23?'red':degrees<18||degrees>21?'yellow':'green');
+  updateMeter('humid',percent,'%',percent>55?'red':percent>45?'yellow':'green');
+  const tempLevel=$('temp').dataset.level,humidityLevel=$('humid').dataset.level;
+  const levels=[tempLevel,humidityLevel];
+  const mood=levels.includes('red')?'traurig':levels.includes('yellow')?'neutral':'fröhlich';
+  const feel=degrees<16?'cold':degrees>23?'hot':'comfortable';
+  $('resident').dataset.feel=feel;
+  $('resident').setAttribute('aria-label','Person auf dem Stuhl: '+mood+(feel==='cold'?', friert':feel==='hot'?', schwitzt':''));
+  $('mouth').setAttribute('d',{'traurig':'M-8 6Q0-3 8 6','neutral':'M-7 4h14','fröhlich':'M-8 2Q0 13 8 2'}[mood]);
+  $('mold').dataset.level=humidityLevel;
+  const factor=climateFactor();
+  const level=factor<=1?'green':factor<2?'yellow':'red';
+  const status=$('divisionStatus');
+  status.dataset.level=level;
+  status.textContent={green:'langsam',yellow:'schneller',red:'sehr schnell'}[level];
+}
+function display(){$('clock').textContent=(60-step)+' s';$('timebar').style.width=(100*(60-step)/60)+'%';$('count').textContent=numbers.format(population);updateMeters();if(state==='running')$('ready').textContent=elapsed>=nextTap?'● Entfernen bereit':'Entfernen in '+Math.ceil(nextTap-elapsed)+' s'}
+function updateRoomClimate(){
+  const openWindows=Number(w[0])+Number(w[1]);
+  if(openWindows){
+    // Per open window, starting at 24 °C: 60 s to 12 °C with heat, 50 s without.
+    const coolingPerSecond=openWindows*(heat?0.20:0.24);
+    t=Math.max(12,t-coolingPerSecond);
+    // Double the air exchange with both windows open. Warmer air also dries faster.
+    const dryingRate=0.070*openWindows*(1+0.025*(t-21));
+    h=30+(h-30)*Math.exp(-dryingRate);
+  }else{
+    t+=((heat?26:19)-t)*0.09;
+    const targetHumidity=71-(t-19)*8/7;
+    h+=(targetHumidity-h)*0.10;
+  }
+}
+function climateFactor(){return ((t-12)/8)*((h-24)/21)}
+function moldNote(){
+  return Math.round(h)>45?'<p>Übrigens schimmelt deine Wohnung.</p>':'';
+}
+function lose(message){
+  state='lost';clearSignals();$('help').disabled=false;$('start').disabled=false;
+  $('start').textContent='Neue Runde';$('ready').textContent='Runde verloren';
+  dialog('Runde verloren','<p>'+message+'</p>'+moldNote(),'Neue Runde');
+}
+const divisionTickSeconds=0.75;
+function tick(wholeSecond,divisionTick){
+  if(wholeSecond){
+    updateRoomClimate();step++;
+    if(t<14-1e-9){
+      lose('Es ist sau kalt! Ja die Bakterien mögen das nicht, ich aber auch nicht!');
+      return;
+    }
+    if(t>=23)warm++;if(h>=60)damp++;
+  }
+// Both factors are positive over the playable climate range and equal 1 at 20 °C / 45 %.
+const climate=climateFactor();
+const births=[];
+for(const bug of [...bugs]){
+  const weight=foodWeights[bug.z];
+  if(weight<0 ? !wholeSecond : !divisionTick)continue;
+  const due=bug.pending;
+  const rate=weight>0 ? weight*climate : -weight/climate;
+  // One warning tick, plus a geometric wait. At neutral climate and weight 1 the mean is six division ticks per division.
+  const waitingFactor=weight>0?4:1;
+  const chance=rate/(waitingFactor+rate);
+  let warnings=0;
+  for(let i=due;i<bug.size;i++)if(Math.random()<chance)warnings++;
+  bug.pending=warnings;
+  bug.signal?.remove();bug.signal=null;
+  if(due){
+    if(weight<0){subtract(bug,due);vanished+=due}
+    else{splits[bug.z]+=due;births.push([bug,due])}
+  }
+  if(warnings)signalEvent(bug);
+}
+for(const [parent,amount] of births){
+  // Distribute larger groups in several directions while keeping the exact offspring count.
+  const portions=Math.min(amount,8);
+  for(let i=0;i<portions;i++)divide(parent,Math.floor(amount/portions)+(i<amount%portions?1:0));
+}
+if(wholeSecond){
+  const arrivals=Math.random()<0.75?1:2;
+  for(let i=0;i<arrivals;i++)spawn();
+  spawned+=arrivals;
+}
+if(population>10000)lose('Du Saubär! Über 10000 Bakterien in deiner Wohnung.');
+}
+let divisionTicks=0;
+function advance(now){
+  if(state!=='running'||paused)return;
+  elapsed=Math.min(60,elapsed+Math.max(0,now-last)/1000);last=now;
+  while(state==='running'){
+    const nextDivision=(divisionTicks+1)*divisionTickSeconds;
+    const nextSecond=step+1;
+    const nextEvent=Math.min(nextDivision,nextSecond);
+    if(nextEvent>elapsed)break;
+    const divisionDue=nextDivision===nextEvent;
+    if(divisionDue)divisionTicks++;
+    tick(nextSecond===nextEvent,divisionDue);
+  }
+  display();if(state==='running'&&step===60)finish();
+}
+function frame(now){if(state!=='running'||paused)return;advance(now);if(state==='running')frameId=requestAnimationFrame(frame)}
+function begin(){state='running';paused=false;elapsed=divisionTicks=step=nextTap=population=spawned=vanished=removed=warm=damp=0;t=24;h=55;heat=true;w=[false,false];splits=[0,0,0];bugs=[];groups.clear();clearSignals();$('bugs').replaceChildren();controls();display();$('start').textContent='Abbrechen';$('start').disabled=false;$('help').disabled=true;last=performance.now();frameId=requestAnimationFrame(frame)}
+function dialog(title,html,button){$('title').textContent=title;$('message').innerHTML=html;$('close').textContent=button;$('dismiss').hidden=button!=='Neue Runde';$('modal').showModal()}
+function finish(){state='done';clearSignals();$('help').disabled=false;$('start').disabled=false;$('start').textContent='Neue Runde';$('ready').textContent='Runde beendet';const total=splits.reduce((a,b)=>a+b,0);
+const feedback=[
+  [1,'(K)eine Bakterien! Insane! Du bist entweder ein*e Sauberkeitsgött*in oder hast eine Zwangsstörung!'],
+  [10,'Weniger als 10 Bakterien. Crazy. Bei dir überlebt nichts was keinen Zellkern hat.'],
+  [100,'Glückwunsch, du hast die Wohnung sauber gehalten wie ein Profi!'],
+  [500,'Weiter so! Da ist aber noch Luft nach oben.']
+].find(([limit])=>population<=limit);
+dialog('Deine Runde',(feedback?'<p><strong>'+feedback[1]+'</strong></p>':'')+'<p><span class="score">'+numbers.format(population)+'</span> Bakterien übrig</p><p>'+spawned+' sind erschienen. Durch '+total+' Teilungen kamen '+total+' dazu. Von selbst verschwunden: '+vanished+'. Von dir entfernt: '+removed+'.</p><p><b>Raumklima</b><br>'+ (warm>=30?'Der Raum war oft warm. Schalte die Heizung früher aus, um Teilungen zu bremsen.':'Der Raum blieb meist kühler. Das hat die Teilung gebremst.')+' '+(damp>=30?'Die Luft war oft feucht. Öffne beide Fenster, damit sie im Spiel trockener wird.':'Die Luft war meist trockener. Auch das bremst die Teilung.')+'</p><p><b>Nahrung</b><br>'+splits[2]+' Teilungen auf dem Teller oder in der Saftpfütze. Dort gibt es die meiste Nahrung. Entferne diese Bakterien möglichst früh.</p>'+moldNote(),'Neue Runde')}
+function abortRound(){
+  cancelAnimationFrame(frameId);state='aborted';paused=false;clearSignals();
+  $('ready').textContent='Runde abgebrochen';$('start').textContent='Neue Runde';$('help').disabled=false;
+}
+$('start').onclick=()=>state==='running'?abortRound():begin();
+$('dismiss').onclick=()=>$('modal').close();
+$('help').onclick=()=>dialog('So spielst du','<p>Halte die Zahl der grünen Bakterien 60 Sekunden lang möglichst klein. Die Runde endet vorzeitig, wenn die Temperatur unter 14 °C fällt oder die Bakterienzahl über 10000 steigt.</p><p><b>Antippen</b> entfernt ein Bakterium. Bei jedem Sekundenwechsel kannst du wieder ein Bakterium entfernen. Jede Sekunde erscheint mit 75 % Wahrscheinlichkeit ein neues Bakterium. Mit 25 % Wahrscheinlichkeit erscheinen zwei. Eine Zahl am Bakterium zeigt, wie viele dort sitzen. Ein Tipp entfernt genau eines.</p><p><b>Aus eins werden zwei.</b> Ein gelber Ring mit Plus kündigt eine Teilung an. Auf dem Boden teilen sich Bakterien langsam, auf dem Teller und in der Saftpfütze schneller. Bei Wärme und hoher Luftfeuchtigkeit teilen sich Bakterien schneller und verschwinden langsamer von selbst. Bei Kälte und trockener Luft ist es umgekehrt. Auf der Wand und der übrigen Tischfläche verschwinden Bakterien nach einer Weile. Vorher erscheint ein roter Ring mit Minus. Tippe auf Fenster und Heizung, um das Raumklima zu ändern.</p><p class="hint">Vereinfachtes Modell im Zeitraffer. Draußen hat es 12 °C. Zwei offene Fenster kühlen und trocknen den Raum schneller als eines. Die Heizung bremst das Abkühlen.</p>','Verstanden');$('close').onclick=()=>{const again=$('close').textContent==='Neue Runde';$('modal').close();if(again)begin()};
+const objects=[$('win0'),$('win1'),$('heater')];objects.forEach((el,i)=>{function change(){if(state!=='running'||paused)return;advance(performance.now());if(state!=='running')return;if(i<2)w[i]=!w[i];else heat=!heat;controls()}el.onclick=change;el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();change()}}});
+$('scene').addEventListener('click',e=>{if(state!=='running'||paused||e.target.closest('.object'))return;advance(performance.now());if(state!=='running'||elapsed<nextTap)return;const svg=$('scene'),pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const p=pt.matrixTransform(svg.getScreenCTM().inverse());let best=-1,dist=23;bugs.forEach((b,i)=>{const d=Math.hypot(b.x-p.x,b.y-p.y);if(d<=dist){dist=d;best=i}});if(best>=0){const bug=bugs[best];if(bug.pending>0&&--bug.pending===0){bug.signal?.remove();bug.signal=null}subtract(bug,1);removed++;nextTap=step+1;display()}});
+document.addEventListener('visibilitychange',()=>{if(state!=='running')return;if(document.hidden){advance(performance.now());paused=true;cancelAnimationFrame(frameId)}else if(paused){paused=false;last=performance.now();frameId=requestAnimationFrame(frame)}});controls();display();
+</script></html>
