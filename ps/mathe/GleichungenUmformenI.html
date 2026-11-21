@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gleichungen umformen I</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f2f2fa;color:#242046;font:1.05rem/1.5 system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:clamp(12px,4vw,44px)}header,footer,.line,.dots{display:flex;align-items:center;gap:8px;flex-wrap:wrap}header,footer{justify-content:space-between}h1,h2{letter-spacing:-.045em;line-height:1.15}h1{font-size:clamp(1.5rem,4vw,2.3rem)}article{background:white;border-radius:24px;padding:clamp(15px,4vw,40px)}h2{font-size:2rem;margin:.4em 0}small{font-weight:bold;color:#635b80}.dots i{width:15px;height:7px;background:#d2cfe2;border-radius:8px}.dots .done{background:#27947e}.dots .now{background:#7150dc}.board{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:5px;align-items:center;margin:12px 0}.side{align-self:stretch;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;border-radius:16px;background:#ece7ff;padding:12px 4px;min-height:180px}.side:last-child{background:#d9f5ee}.fraction{display:grid;max-width:100%}.line{justify-content:center;padding:5px 0;gap:3px}.den{border-top:3px solid}.equals{font-size:1.5rem}button{font:inherit;font-weight:650;cursor:pointer;border:0;border-radius:10px;min-height:44px;padding:8px 14px}.factor,.one{font:bold 1.35rem Georgia,serif}.factor{min-width:44px;padding:4px;background:white;color:inherit;box-shadow:0 2px 0 #24204628;touch-action:none;user-select:none;cursor:grab}.go{background:#5035ac;color:white}.soft{background:#efedf6}.hint{background:#fff3c8;border-radius:12px;padding:12px}details,footer{margin-top:16px}.switch{display:flex;align-items:center;gap:8px;background:none;color:#372958;padding-left:0}.switch::before{content:"";width:44px;height:26px;border-radius:20px;background:radial-gradient(circle at 13px 50%,white 8px,transparent 9px),#79748b}.switch[aria-checked=true]::before{background:radial-gradient(circle at 31px 50%,white 8px,transparent 9px),#5035ac}.source{opacity:.3}.ghost{position:fixed;pointer-events:none;z-index:10;transform:translate(-50%,-50%);border-radius:10px;text-align:center;background:#ffea98}.drop{display:inline-grid;place-items:center;width:50px;height:44px;border:2px dashed #696279;border-radius:9px;background:#ffffffaa}.drop.over{outline:2px solid #6543c3}.drop.wrong,.hint.wrong{background:#ffe1df;color:#842720}.factor.right,.hint.right{background:#d5f4e2;color:#125433}
+.board{grid-template-rows:auto auto;row-gap:0}
+.side{display:grid;grid-row:1 / 3;grid-template-rows:subgrid;row-gap:0;justify-items:center;justify-content:stretch}
+.side:first-child{grid-column:1}
+.side:last-child{grid-column:3}
+.equals{grid-column:2;grid-row:1 / 3}
+.fraction{grid-row:1 / 3;grid-template-rows:subgrid;align-self:stretch}
+.line{align-content:end}
+.den{align-content:start}
+.one{display:inline-grid;place-items:center;min-width:44px;height:44px}
+.fraction:not(:has(.den))>.line{grid-row:span 2;align-content:center}
+.controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+</style><main><header><h1>Gleichungen umformen I</h1><div class="dots" id="dots" aria-hidden="true"></div></header><article id="app"></article></main>
+<script>
+const tasks=[
+ ['4','3 4','','12',''],
+ ['24','24','4','6',''],
+ ['9','2 9','3','6',''],
+ ['x','12','x','3',''],
+ ['a','2 a','b','c',''],
+ ['t','a','t','b','c'],
+ ['s','v s','t','a b',''],
+ ['y','2 a','y','4','b'],
+ ['p','k p','m n','r','s'],
+ ['q','a q','b c','d e','f'],
+ ['u','a b u','c d','3 e','f'],
+ ['z','2 a','b z','d e','3'],
+ ['w','a b w','c d','e f','g h'],
+ ['r','a b','c d r','e f','g h'],
+ ['k','2 a b k','c d','e f','3 g']
+];
+const words=s=>s.split(' ').filter(Boolean);
+const copy=v=>JSON.parse(JSON.stringify(v));
+const app=document.querySelector('#app'),dots=document.querySelector('#dots');
+let index,parts,history,message,fractions,drag;
+let flipping=false;
+function reciprocal(p){return [p[1],p[0],p[3],p[2]]}
+function start(){index=0;loadTask()}
+function loadTask(){parts=tasks[index].slice(1).map(words);fractions=false;history=[];message='Ziehe eine Zahl oder Variable auf die andere Seite.';render()}
+function progress(){dots.innerHTML=tasks.map((_,i)=>'<i class="'+(i<index?'done':i===index?'now':'')+'"></i>').join('')}
+function line(slot,targets){
+ const factors=parts[slot].map((v,i)=>`<button class="factor" data-slot="${slot}" data-i="${i}" aria-label="${v}, ${slot%2?'Nenner':'Zähler'} ${slot<2?'links':'rechts'}">${v}</button>`);
+ if(targets) factors.push(`<span class="drop" data-drop="${slot}" aria-label="Zielfeld im ${slot%2?'Nenner':'Zähler'}"></span>`);
+ return factors.join(' · ')||'<span class="one">1</span>';
+}
+function side(s,targets=false){
+ const n=s*2;
+ return `<div class="side" data-side="${s}"><div class="fraction"><div class="line">${line(n,targets)}</div>${fractions||flipping||targets||parts[n+1].length?'<div class="line den">'+line(n+1,targets)+'</div>':''}</div></div>`;
+}
+function render(){
+ progress();
+ app.innerHTML=`<small>Aufgabe ${index+1} von ${tasks.length}</small><h2>Stelle <em>${tasks[index][0]}</em> frei.</h2><p><em>${tasks[index][0]}</em> soll alleine auf der linken Seite stehen.</p><div class="controls"><button class="switch" role="switch" aria-checked="${fractions}" data-switch>Bruchansicht</button><button class="soft" data-flip>Kehrwerte bilden</button></div><div class="board">${side(0)}<b class="equals">=</b>${side(1)}</div><div class="hint" role="status">${message}</div><details><summary>Spielregel</summary>Ziehe einen Faktor aus dem Zähler in den gegenüberliegenden Nenner oder aus dem Nenner in den gegenüberliegenden Zähler. Mit „Kehrwerte bilden“ vertauschst du auf beiden Seiten Zähler und Nenner. Alle Variablen stehen für Zahlen ungleich null. Die rechte Seite darf als Produkt oder Bruch stehen bleiben.</details><footer><button class="soft" data-undo aria-label="Letzten Zug rückgängig machen" title="Letzten Zug rückgängig machen" ${history.length?'':'disabled'}><span aria-hidden="true" style="font-size:1.5rem;line-height:1">↶</span></button><button class="go" data-submit>Fertig</button></footer>`;
+}
+function nextHint(goal){
+ if(parts[1].includes(goal)) return 'Bilde die Kehrwerte, damit '+goal+' links in den Zähler kommt.';
+ if(parts[2].includes(goal)) return 'Ziehe '+goal+' aus dem rechten Zähler in den linken Nenner.';
+ if(parts[3].includes(goal)) return 'Ziehe '+goal+' aus dem rechten Nenner in den linken Zähler.';
+ const extra=parts[0].find(f=>f!==goal);
+ if(extra) return 'Ziehe '+extra+' aus dem linken Zähler in den rechten Nenner.';
+ if(parts[1].length) return 'Ziehe '+parts[1][0]+' aus dem linken Nenner in den rechten Zähler.';
+}
+function submit(){
+ const goal=tasks[index][0];
+ const hint=nextHint(goal);
+ if(hint){
+  message='Noch nicht ganz. Tipp: '+hint;
+  app.querySelector('.hint').textContent=message;
+  const slot=parts.findIndex(factors=>factors.includes(goal));
+  const target=app.querySelector(`[data-slot="${slot}"][data-i="${parts[slot].indexOf(goal)}"]`);
+  for(const animation of target.getAnimations()){
+   if(animation.id==='goal-flash') animation.cancel();
+  }
+  target.animate([
+   {outline:'4px solid transparent'},
+   {outline:'4px solid #c53436',offset:0.25},
+   {outline:'4px solid transparent'}
+  ],{id:'goal-flash',duration:550});
+  return;
+ }
+ index++;
+ if(index<tasks.length){
+  loadTask();
+  message='Richtig! Weiter geht’s mit Aufgabe '+(index+1)+'.';
+  app.querySelector('.hint').textContent=message;
+ }else{
+  progress();
+  app.innerHTML='<h2>Herzlichen Glückwunsch!</h2><p>Du hast alle 15 Gleichungen richtig umgeformt.</p><button class="go" data-start>Noch einmal spielen</button>';
+ }
+}
+
+async function flip(){
+ flipping=true;
+ render();
+ const rows=()=>Array.from(app.querySelectorAll('.line'),line=>Array.from(line.children));
+ const before=rows().map(row=>row.map(el=>el.getBoundingClientRect()));
+ history.push(copy(parts));
+ parts=reciprocal(parts);
+ message='Auf beiden Seiten wurden Zähler und Nenner vertauscht.';
+ render();
+ const animations=[];
+ rows().forEach((row,slot)=>row.forEach((el,i)=>{
+  const from=before[slot ^ 1][i],to=el.getBoundingClientRect();
+  const dx=from.left-to.left,dy=from.top-to.top;
+  const arc=slot%2===0?-12:12;
+  animations.push(el.animate([
+   {transform:'translate('+dx+'px,'+dy+'px)'},
+   {transform:'translate('+(dx/2+arc)+'px,'+dy/2+'px)'},
+   {transform:'translate(0,0)'}
+  ],{duration:650,easing:'ease-in-out'}).finished);
+ }));
+ await Promise.all(animations);
+ flipping=false;
+ render();
+ app.querySelector('[data-flip]').focus();
+}
+function position(e){
+ drag.ghost.style.left=e.clientX+'px';
+ drag.ghost.style.top=e.clientY+'px';
+ const target=document.elementFromPoint(e.clientX,e.clientY)?.closest('[data-drop]');
+ app.querySelector('.over')?.classList.remove('over');
+ target?.classList.add('over');
+ return target;
+}
+app.addEventListener('pointerdown',e=>{
+ const source=e.target.closest('[data-slot]');
+ if(!source||drag||flipping||e.button!==0)return;
+ const slot=Number(source.dataset.slot);
+ drag={id:e.pointerId,source,slot,i:Number(source.dataset.i),x:e.clientX,y:e.clientY};
+ source.setPointerCapture(e.pointerId);
+});
+app.addEventListener('pointermove',e=>{
+ if(drag?.id!==e.pointerId||drag.settling)return;
+ if(!drag.ghost){
+  if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)<5)return;
+  const opposite=drag.slot<2?1:0;
+  app.querySelector(`[data-side="${opposite}"]`).outerHTML=side(opposite,true);
+  drag.ghost=document.createElement('span');
+  drag.ghost.className='factor ghost';
+  drag.ghost.textContent=drag.source.textContent;
+  document.body.append(drag.ghost);
+  drag.source.classList.add('source');
+ }
+ position(e);
+});
+function endDrag(){
+ drag?.ghost?.remove();
+ drag=null;
+ render();
+}
+app.addEventListener('pointercancel',e=>{if(drag?.id===e.pointerId&&!drag.settling)endDrag()});
+app.addEventListener('pointerup',async e=>{
+ if(drag?.id!==e.pointerId||drag.settling)return;
+ if(!drag.ghost){drag=null;return}
+ const target=position(e),{slot,i,source,ghost}=drag;
+ const factor=parts[slot][i],destination=3-slot;
+ drag.settling=true;
+ const correct=target && Number(target.dataset.drop)===destination;
+ const hint=app.querySelector('.hint');
+ let flash;
+ if(target){
+  const color=correct?'#168347':'#c53436';
+  target.classList.remove('over');
+  target.textContent=correct?factor:'×';
+  flash=target.animate([
+   {outline:'4px solid '+color},
+   {outline:'4px solid transparent'},
+   {outline:'4px solid '+color}
+  ],{duration:460,fill:'forwards'}).finished;
+ }
+ if(correct){
+  ghost.hidden=true;
+  message='Richtig! Beide Seiten wurden '+(slot%2?'mit '+factor+' multipliziert.':'durch '+factor+' geteilt.');
+  hint.textContent=message;
+  await flash;
+  history.push(copy(parts));
+  parts[slot].splice(i,1);
+  parts[destination].push(factor);
+  endDrag();
+ }else{
+  message=target?'Versuche es im '+(destination%2?'Nenner.':'Zähler.'):'Ziehe den Faktor in eines der beiden Felder.';
+  hint.textContent=message;
+  const box=source.getBoundingClientRect();
+  const returning=ghost.animate([{left:e.clientX+'px',top:e.clientY+'px'},{left:(box.left+box.width/2)+'px',top:(box.top+box.height/2)+'px'}],{duration:350,fill:'forwards'}).finished;
+  await Promise.all([flash,returning]);
+  endDrag();
+ }
+});
+app.addEventListener('click',e=>{
+ if(drag||flipping)return;
+ const b=e.target.closest('button');
+ if(!b)return;
+ if(b.hasAttribute('data-switch')){fractions=!fractions;render();app.querySelector('[data-switch]').focus()}
+ else if(b.hasAttribute('data-flip'))flip();
+ else if(b.hasAttribute('data-undo')&&history.length){parts=history.pop();message='Der letzte Zug wurde zurückgenommen.';render()}
+ else if(b.hasAttribute('data-submit'))submit();
+ else if(b.hasAttribute('data-start'))start();
+});
+start();
+</script></html>
