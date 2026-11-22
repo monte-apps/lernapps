@@ -235,7 +235,7 @@ function dialog(title,html,button){$('title').textContent=title;$('message').inn
 function finish(){state='done';clearSignals();$('help').disabled=false;$('start').disabled=false;$('start').textContent='Neue Runde';$('ready').textContent='Runde beendet';const total=splits.reduce((a,b)=>a+b,0);
 const feedback=[
   [1,'Weniger als 1 Bakterium! Unglaublich, dein Zimmer ist sauberer als ein OP-Saal!'],
-  [10,'Weniger als 10 Bakterien. Crazy. Bei dir überlebt nichts was keinen Zellkern hat.'],
+  [10,'Weniger als 10 Bakterien! Nicht schlecht! Lebewesen ohne Zellkern haben wenig Chance in deinem Zimmer zu überleben'],
   [100,'Glückwunsch, du hast die Wohnung sauber gehalten wie ein Profi!'],
   [500,'Weiter so! Da ist aber noch Luft nach oben.']
 ].find(([limit])=>population<=limit);
