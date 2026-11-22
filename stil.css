@@ -13,6 +13,9 @@ header p { margin: .7rem 0 0; font-size: 1.12rem }
 section { margin-top: 2rem }
 h2 { font-size: 1.4rem; margin: 0 0 .8rem }
 .grid { display: grid; grid-template-columns: repeat(var(--count,2),minmax(0,1fr)); gap: 1rem }
+[data-fach] .grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12.5rem), 1fr));
+}
 .card { text-decoration: none; display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; gap: 1rem; padding: 1.3rem 1.6rem; border-radius: 1.3rem; color: var(--tone); background: linear-gradient(120deg, var(--highlight), var(--surface) 85%); border: 1px solid color-mix(in srgb, var(--tone) 35%, var(--surface)); font-weight: 750; font-size: 1.65rem }
 .card:hover { border-color: currentColor; box-shadow: 0 0 0 1px var(--tone) }
 .card:has(.thumbnail) { container-type: inline-size; flex-direction: column; align-items: stretch; overflow: hidden; padding: 0; gap: 0 }
