@@ -17,16 +17,26 @@ h1{font-size:clamp(1.1rem,3vw,1.6rem);line-height:1.1;letter-spacing:-.04em;marg
 .round{display:flex;align-items:center;justify-content:space-between;gap:20px;margin:25px 0 16px}
 .rail{display:flex;gap:5px;width:min(42%,235px)}.rail i{height:7px;border-radius:4px;flex:1;background:#d8ded3}.rail .current{background:#457f67}.rail .done{background:#84cb92}
 .sheet{background:white;border:1px solid var(--line);border-radius:23px;padding:clamp(16px,3.2vw,38px);box-shadow:0 5px 0 #e5e8df}
-.profile{display:flex;align-items:center;flex-wrap:wrap;gap:8px 16px;background:#edf8ef;border-radius:12px;padding:12px 16px;margin-bottom:18px}.profile strong{font-size:1.12rem}.profile span{font-size:.92rem}.quiz{display:grid;grid-template-columns:minmax(190px,.85fr) minmax(0,1.5fr);gap:clamp(20px,5vw,68px);align-items:center}
-.tile{min-height:290px;position:relative;isolation:isolate;overflow:hidden;background-color:var(--green);background-image:radial-gradient(#80bc892e 1.5px,transparent 1.5px);background-size:13px 13px;border-radius:17px;padding:22px;display:flex;flex-direction:column;justify-content:space-between}
-.tile:after,.tile:before{content:"";position:absolute;z-index:-1;width:220px;height:100px;border:2px solid #75b98b77;border-radius:50%;transform:rotate(-33deg);bottom:-20px;right:-90px}.tile:before{transform:rotate(40deg)}
+.profile{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px 24px;padding:14px 20px;margin-bottom:18px}
+.profile-id,.profile-facts{display:flex;align-items:center;gap:16px}.profile-id{font-weight:650}.profile-facts{flex-wrap:wrap;gap:6px 18px;font-size:.9rem}
+.profile-symbol{display:inline-flex;align-items:flex-end;font-size:2.2rem;line-height:1;font-weight:750;letter-spacing:-.06em}.profile-symbol sub{font-size:.85rem;letter-spacing:0;line-height:1;transform:translateY(.15em)}
+.quiz{display:grid;grid-template-columns:minmax(190px,.85fr) minmax(0,1.5fr);gap:clamp(20px,5vw,68px);align-items:center}
+.tile,.profile{position:relative;isolation:isolate;overflow:hidden;background-color:var(--green);background-image:radial-gradient(#80bc892e 1.5px,transparent 1.5px);background-size:13px 13px;border-radius:17px}
+.tile{min-height:290px;padding:22px;display:flex;flex-direction:column;justify-content:space-between}
+:is(.tile,.profile):after,:is(.tile,.profile):before{content:"";position:absolute;z-index:-1;width:220px;height:100px;border:2px solid #75b98b77;border-radius:50%;transform:rotate(-33deg);bottom:-20px;right:-90px}:is(.tile,.profile):before{transform:rotate(40deg)}
 .symbol{font-size:clamp(5rem,10vw,7.6rem);letter-spacing:-.07em;font-weight:750;line-height:1;text-align:center}.tile small{min-height:24px;font-weight:650;text-align:center}
+.tile-top{display:flex;justify-content:space-between;align-items:baseline;gap:4px;flex-wrap:wrap}.tile-group{margin-left:auto}
+.tile-symbol{position:relative;align-self:center}.atomic-number{position:absolute;right:100%;top:85%;font-size:1rem;line-height:1}
 .num{display:inline-grid;place-items:center;background:#eadfff;color:#543e85;width:32px;height:32px;border-radius:50%}.step{color:#56626a;font-size:.88rem;font-weight:650}
 h2{font-size:clamp(1.5rem,3.8vw,2.65rem);line-height:1.1;letter-spacing:-.045em;margin:16px 0 23px}p{margin:8px 0 14px}button,input{font:inherit}button{cursor:pointer}
 input{padding:12px 15px;border:1.5px solid #94a39b;border-radius:10px;min-width:0;width:100%;color:var(--ink);background:#fcfdfb}
 button.action{background:var(--ink);color:white;padding:13px 23px;border:0;border-radius:10px;font-weight:650;min-height:46px}
 button:hover{filter:brightness(1.13)}:focus-visible{outline:3px solid #8756ca;outline-offset:3px}
 .feedback{min-height:1.45em;color:#8d3327;margin:8px 0 0;font-size:.94rem}
+.valence-mark{fill:#5655ad;stroke:#ffbf47;stroke-width:3px;r:8px}
+.valence-flash{animation:valence-pulse .75s ease-in-out 2}
+@keyframes valence-pulse{0%,100%{fill:#923d0d;stroke:#ffbf47;stroke-width:3px;r:8px}50%{fill:#5655ad;stroke:transparent;stroke-width:0;r:6px}}
+@media(prefers-reduced-motion:reduce){.valence-flash{animation:valence-still 1.5s step-end}@keyframes valence-still{from,to{fill:#923d0d;stroke:#ffbf47;stroke-width:3px;r:8px}}}
 .confirmed input{background:#d6f5dc;border-color:#328152;transition:background-color .18s ease-out}
 .confirmed .feedback{color:#22653e;font-weight:650}
 @media(prefers-reduced-motion:reduce){.confirmed input{transition:none}}
@@ -79,24 +89,25 @@ function start(){
 function beginPage(){stage=0;placed=0;selected=false;missed=false;render()}
 function stepLabel(){return '<div class="step"><span class="num">0'+(stage+1)+'</span>'+steps[stage]+'</div>'}
 const romanGroups=['I','II','III','IV','V','VI','VII','VIII'];
+function tileContents(answered){
+ const [symbol,name,z,group]=element();
+ const atomicNumber=answered>=3?'<b class="atomic-number" aria-label="Ordnungszahl '+z+'">'+z+'</b>':'';
+ const topRight=answered>=2?'<b class="tile-group" aria-label="Hauptgruppe '+group+'">'+romanGroups[group-1]+'</b>':'';
+ return '<div class="tile-top"><span class="eyebrow">ELEMENTSYMBOL</span>'+topRight+'</div><div class="tile-symbol"><strong class="symbol">'+symbol+'</strong>'+atomicNumber+'</div><small>'+(answered>=1?name:'')+'</small>';
+}
 function profile(){
  const [symbol,name,z,group]=element();
- const facts=[];
- if(stage>=2)facts.push('Hauptgruppe: '+romanGroups[group-1]);
- if(stage>=3)facts.push('Ordnungszahl: '+z);
- if(stage>=5)facts.push('Valenzelektronen: '+counts().filter(Boolean).at(-1));
- return '<aside class="profile" aria-label="Elementsteckbrief"><strong>'+symbol+' – '+name+'</strong>'+facts.map(fact=>'<span>'+fact+'</span>').join('')+'</aside>';
+ const valence=stage===5?'<span>Valenzelektronen: <b>'+counts().filter(Boolean).at(-1)+'</b></span>':'';
+ return '<aside class="profile" aria-label="Elementsteckbrief"><div class="profile-id"><strong class="profile-symbol"><sub title="Ordnungszahl" aria-label="Ordnungszahl '+z+'">'+z+'</sub>'+symbol+'</strong>'+name+'</div><div class="profile-facts"><span>Hauptgruppe: <b>'+romanGroups[group-1]+'</b></span>'+valence+'</div></aside>';
 }
 function render(){
  const [symbol,name,z,group]=element();
  $('round').textContent='Element '+(page+1)+' von 10';
  $('rail').innerHTML=deck.map((_,i)=>'<i class="'+(i<page?'done':i===page?'current':'')+'"></i>').join('');
- const tile='<div class="tile"><span class="eyebrow">ELEMENTSYMBOL</span><strong class="symbol">'+symbol+'</strong><small></small></div>';
  if(stage===3 || stage===4 || stage===5){
   $('sheet').innerHTML=profile()+'<div class="lab"><svg class="diagram" id="diagram" viewBox="0 0 320 320" aria-label="Schalenmodell von '+name+'"></svg><div id="panel"></div></div>';
   draw();
- }else if(stage>0) $('sheet').innerHTML=profile()+'<div id="panel"></div>';
- else $('sheet').innerHTML='<div class="quiz">'+tile+'<div id="panel"></div></div>';
+ }else $('sheet').innerHTML='<div class="quiz"><div class="tile" id="tile">'+tileContents(stage)+'</div><div id="panel"></div></div>';
  const panel=$('panel');
  if(stage===3){
   panel.innerHTML=stepLabel()+'<h2>Baue das Schalenmodell.</h2><p>Ziehe die Elektronen in die Schalen. Du kannst auch ein Elektron und dann die Schale antippen.</p><div class="capacity"><b>Maximale Elektronenzahl je Schale</b><div class="limits">'+names.map((n,i)=>'<span>'+n+' · <b>'+capacities[i]+'</b></span>').join('')+'</div></div><p class="energy" id="energy" role="status" hidden></p><div class="bank"><b id="stock"></b><div class="tokens" id="tokens"></div></div><div class="note">Beim neutralen Atom entspricht die Anzahl der Elektronen der Ordnungszahl.</div><p class="feedback" id="feedback" role="status"></p>';
@@ -120,18 +131,25 @@ function render(){
 
    const number=stage===1?group:stage===2?z:counts().filter(Boolean).at(-1);
    const ok=stage===0?[name,element()[4]].some(n=>n?.toLowerCase()===value):value===String(number)||(stage===1 && value.toUpperCase()===romanGroups[group-1]);
-   if(!ok){missed=true;$('feedback').textContent='Das stimmt noch nicht. Versuche es erneut.';$('answer').select();return}
+   if(!ok){
+    missed=true;
+    $('feedback').textContent='Das stimmt noch nicht. Versuche es erneut.';
+    if(stage===4)draw(true);
+    $('answer').select();
+    return;
+   }
    if(!missed)firstTry++;
    missed=false;
    form.classList.add('confirmed');
    $('answer').readOnly=true;
    form.querySelector('button').disabled=true;
    $('feedback').textContent='✓ Richtig!';
+   if(stage<3)$('tile').innerHTML=tileContents(stage+1);
    setTimeout(()=>{stage++;render()},600);
   };
  }
 }
-function draw(){
+function draw(flashValence=false){
  const svg=$('diagram'), amounts=counts();
  const visible=Math.max(amounts.findLastIndex(Boolean),stage===3?order[placed]:0);
  let art='<title>'+element()[1]+' mit '+placed+' Elektronen</title>';
@@ -140,7 +158,8 @@ function draw(){
   art+='<g data-shell="'+i+'" '+(stage===3?'tabindex="0" role="button"':'role="img"')+' aria-label="'+names[i]+'-Schale, '+amounts[i]+' Elektronen"><circle cx="160" cy="160" r="'+r+'" fill="none" stroke="'+(i%2?'#e1f0e8':'#f1f9f1')+'" stroke-width="'+(outer-inner)+'"/><circle cx="160" cy="160" r="'+outer+'" fill="none" stroke="#598070"/><text x="160" y="'+(164-r)+'" text-anchor="middle" fill="#294e40" font-size="13" font-weight="bold">'+names[i]+'</text>';
   for(let j=0;j<amounts[i];j++){
    const angle=(j+.5)*2*Math.PI/amounts[i],x=160+r*Math.sin(angle),y=160-r*Math.cos(angle);
-   art+='<circle cx="'+x+'" cy="'+y+'" r="6" fill="#5655ad"/><path d="M'+(x-3)+' '+y+'h6" stroke="white" stroke-width="1.5"/>';
+   const mark=i===visible && stage===5?'valence-mark':i===visible && flashValence?'valence-flash':'';
+   art+='<circle class="'+mark+'" cx="'+x+'" cy="'+y+'" r="6" fill="#5655ad"/><path d="M'+(x-3)+' '+y+'h6" stroke="white" stroke-width="1.5"/>';
   }
   art+='</g>';
  }
