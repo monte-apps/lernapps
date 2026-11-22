@@ -35,13 +35,13 @@
 <ellipse cx="332" cy="369" rx="48" ry="45" fill="#654739"/><path d="M292 357q22-40 58-20m-47 15q23-20 46-12" stroke="#99715a" fill="none"/><path d="M287 360q-7 9 1 17m88-18q8 10 0 17" fill="#e7ac87" stroke="#805c47" stroke-width="2"/><path d="M289 353q8-25 39-28 30-3 44 24" fill="none" stroke="#469f9d" stroke-width="5"/><path d="M297 365q4 20 25 27m-16-34q3 19 24 31m30-41q10 19-10 39m17-31q6 17-8 28" fill="none" stroke="#926a50" stroke-width="2.5" stroke-linecap="round"/><ellipse cx="337" cy="397" rx="24" ry="21" fill="#77513c"/><path d="M316 389q18-11 37-3" stroke="#efa775" stroke-width="6" fill="none"/>
 </g></svg><p class="caption" id="caption" aria-live="polite">Drücke auf Start. Dann hast du eine Minute für deine Kultur.</p></section>
 <aside class="controls"><h2>Laboraktionen</h2><p>Sorge dafür, dass bei Ablauf der 60 Sekunden mehr als 10.000 Bakterien in der Schale leben.</p>
-<button data-act="seed"><span class="glyph">✦</span>Startzelle einsetzen</button>
+<button data-act="seed"><span class="glyph">✦</span>Startbakterie einsetzen</button>
 <button data-act="food"><span class="glyph">⁙</span>Nährstoffe zugeben</button>
 <button data-act="water"><span class="glyph">♢</span>Wasser zugeben</button>
 <button data-act="heat"><span class="glyph">♨</span><span id="heatText">Platte einschalten</span></button>
 <button data-act="lid"><span class="glyph">◯</span><span id="lidText">Deckel schließen</span></button></aside></div>
 <div class="metrics" aria-label="Messwerte"><div class="metric" id="temp"></div><div class="metric" id="wet"></div><div class="metric" id="food"></div><div class="metric" id="division"></div></div>
-<p class="caption">Zeitraffermodell mit einer erfundenen Bakterienart. Die Teilungszeit gilt in Spielsekunden. Bei großer Population steht jedes Oval für mehrere Zellen.</p>
+<p class="caption">Zeitraffermodell mit einer erfundenen Bakterienart. Die Teilungszeit gilt in Spielsekunden. Bei großer Population steht jedes Bakteriensymbol für mehrere Bakterien.</p>
 <dialog id="result" aria-labelledby="endTitle"><h2 id="endTitle"></h2><p id="summary"></p><p id="lesson"></p><button id="again">Schließen</button></dialog>
 </main><script>
 'use strict';
@@ -67,7 +67,7 @@ function finish(extinct){
  const risks=s.hazards.some(x=>x>0)?s.hazards:s.limits;
  const worst=risks.indexOf(Math.max(...risks));
  el('lesson').textContent=['Die Temperatur hat deine Kultur am stärksten beeinflusst. Kühle bremst die Teilung, starke Hitze schädigt Zellen. Die Platte reagiert allmählich.','Feuchtigkeit war der wichtigste Engpass. Auf der warmen Platte verdunstet Wasser schneller. Ein geschlossener Deckel hält mehr davon in der Schale.','Nährstoffe waren der wichtigste Engpass. Bei vielen Zellen sinkt der Vorrat schneller, weil mehr Zellen gleichzeitig Nahrung verbrauchen.'][worst];
- if(!s.peak)el('lesson').textContent='Die Schale blieb leer. Setze die Startzelle während der Runde ein, damit eine Population wachsen kann.';
+ if(!s.peak)el('lesson').textContent='Die Schale blieb leer. Setze die Startbakterie während der Runde ein, damit eine Population wachsen kann.';
  move=null;draw(1,last);el('result').showModal();paint();
 }
 function advance(dt){
@@ -93,7 +93,7 @@ function advanceCulture(dt){
  }
  s.peak=Math.max(s.peak,s.n);
 }
-const names={seed:'Startzelle eingesetzt.',water:'Wasser zugegeben.',food:'Nährstoffe zugegeben.',heat:'Wärmeplatte umgeschaltet.',lid:'Deckel bewegt.'};
+const names={seed:'Startbakterie eingesetzt.',water:'Wasser zugegeben.',food:'Nährstoffe zugegeben.',heat:'Wärmeplatte umgeschaltet.',lid:'Deckel bewegt.'};
 const instruments={seed:[89,106],food:[553,108],water:[549,229],heat:[426,284],lid:[330,172]};
 function unavailable(key){return !!move||s.state!=='running'||(key==='seed'&&s.peak>0)}
 function act(key){
@@ -111,7 +111,7 @@ function applyAction(key){
 }
 buttons.forEach(b=>b.onclick=()=>act(b.dataset.act));
 function startRound(){
- reset();s.state='running';last=performance.now();el('caption').textContent='Die Minute läuft. Du entscheidest, wann du die Startzelle einsetzt.';paint();
+ reset();s.state='running';last=performance.now();el('caption').textContent='Die Minute läuft. Du entscheidest, wann du die Startbakterie einsetzt.';paint();
 }
 el('round').onclick=()=>{
  if(s.state==='running'){
@@ -137,7 +137,7 @@ function paint(){
  buttons.forEach(b=>b.disabled=unavailable(b.dataset.act));
 }
 const svgNS='http://www.w3.org/2000/svg';
-const cellNodes=Array.from({length:140},()=>{const g=document.createElementNS(svgNS,'g');g.innerHTML='<rect x="-5" y="-2.7" width="10" height="5.4" rx="2.7" fill="#509e54" stroke="#286f45" stroke-width=".8"/><path d="M-2-1h1.5" stroke="#c1f194" stroke-linecap="round"/>';el('cells').append(g);return g});
+const cellNodes=Array.from({length:280},()=>{const g=document.createElementNS(svgNS,'g');g.innerHTML='<rect x="-5" y="-2.7" width="10" height="5.4" rx="2.7" fill="#509e54" stroke="#286f45" stroke-width=".8"/><path d="M-2-1h1.5" stroke="#c1f194" stroke-linecap="round"/>';el('cells').append(g);return g});
 function draw(dt,now){
  const isAdd=move&&['water','food','seed'].includes(move.key),a=move?move.age:0;
  let goal=s.lid?1:0;if(isAdd&&move.closed&&a<.85)goal=0;
@@ -154,7 +154,7 @@ function draw(dt,now){
  const d='M397 362 Q462 350 '+x+' '+y;el('arm').setAttribute('d',d);el('armEdge').setAttribute('d',d);el('hand').setAttribute('transform','translate('+x+' '+y+')');
  const tool=isAdd&&a>.25&&a<.97?move.key:'';
  if(el('tool').dataset.key!==tool){el('tool').dataset.key=tool;el('tool').innerHTML=({water:'<path d="M-8-4l-18-21" stroke="#4999b7" stroke-width="6"/><circle cx="-26" cy="-16" r="3" fill="#52bad9"/>',food:'<ellipse cx="-15" cy="-8" rx="10" ry="5" fill="#f8d78f"/><circle cx="-20" cy="0" r="2" fill="#df9944"/>',seed:'<path d="M-8-4l-16-16" stroke="#7b9489"/><circle cx="-25" cy="-21" r="3" fill="#70b65a"/>'})[tool]||''}
- const count=move?.key==='seed'&&a<.6?0:Math.min(140,Math.floor(s.n));
+ const count=move?.key==='seed'&&a<.6?0:Math.min(cellNodes.length,Math.floor(s.n));
  cellNodes.forEach((g,i)=>{
  if(i>=count){if(g.style.display!=='none')g.style.display='none';return}g.style.display='';
  const phase=s.generation%1,level=i?Math.floor(Math.log2(i)):0,parent=i?i-2**level:0;
