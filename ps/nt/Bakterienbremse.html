@@ -124,13 +124,14 @@ function updateMeter(id,value,unit,level){
   meter.dataset.level=level;
   meter.setAttribute('aria-label',meter.textContent+' – '+({green:'grüner Bereich',yellow:'Warnbereich',red:'kritischer Bereich'}[level]));
 }
+const moldThreshold=50;
 let lastMeterT,lastMeterH;
 function updateMeters(){
   if(t===lastMeterT&&h===lastMeterH)return;
   lastMeterT=t;lastMeterH=h;
   const degrees=Math.round(t),percent=Math.round(h);
   updateMeter('temp',degrees,'°C',degrees<16||degrees>23?'red':degrees<18||degrees>21?'yellow':'green');
-  updateMeter('humid',percent,'%',percent>55?'red':percent>45?'yellow':'green');
+  updateMeter('humid',percent,'%',percent>55?'red':percent>=moldThreshold?'yellow':'green');
   const tempLevel=$('temp').dataset.level,humidityLevel=$('humid').dataset.level;
   const levels=[tempLevel,humidityLevel];
   const mood=levels.includes('red')?'traurig':levels.includes('yellow')?'neutral':'fröhlich';
@@ -163,7 +164,7 @@ function updateRoomClimate(){
 }
 function climateFactor(){return ((t-12)/8)*((h-24)/21)}
 function moldNote(){
-  return Math.round(h)>45?'<p>Übrigens schimmelt deine Wohnung.</p>':'';
+  return Math.round(h)>=moldThreshold?'<p>Übrigens schimmelt deine Wohnung.</p>':'';
 }
 function lose(message){
   state='lost';clearSignals();$('help').disabled=false;$('start').disabled=false;
@@ -175,7 +176,7 @@ function tick(wholeSecond,divisionTick){
   if(wholeSecond){
     updateRoomClimate();step++;
     if(t<14-1e-9){
-      lose('Es ist sau kalt! Ja die Bakterien mögen das nicht, ich aber auch nicht!');
+      lose('Ich friere! Die Bakterien mögen zwar keine Kälte, ich aber auch nicht!');
       return;
     }
     if(t>=23)warm++;if(h>=60)damp++;
@@ -233,7 +234,7 @@ function begin(){state='running';paused=false;elapsed=divisionTicks=step=nextTap
 function dialog(title,html,button){$('title').textContent=title;$('message').innerHTML=html;$('close').textContent=button;$('dismiss').hidden=button!=='Neue Runde';$('modal').showModal()}
 function finish(){state='done';clearSignals();$('help').disabled=false;$('start').disabled=false;$('start').textContent='Neue Runde';$('ready').textContent='Runde beendet';const total=splits.reduce((a,b)=>a+b,0);
 const feedback=[
-  [1,'(K)eine Bakterien! Insane! Du bist entweder ein*e Sauberkeitsgött*in oder hast eine Zwangsstörung!'],
+  [1,'Weniger als 1 Bakterium! Unglaublich, dein Zimmer ist sauberer als ein OP-Saal!'],
   [10,'Weniger als 10 Bakterien. Crazy. Bei dir überlebt nichts was keinen Zellkern hat.'],
   [100,'Glückwunsch, du hast die Wohnung sauber gehalten wie ein Profi!'],
   [500,'Weiter so! Da ist aber noch Luft nach oben.']
