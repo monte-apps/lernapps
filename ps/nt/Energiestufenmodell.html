@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Energiestufenmodell</title>
+<style>
+*{box-sizing:border-box} [hidden]{display:none!important}
+:root{font:17px/1.45 "Segoe UI",Arial,sans-serif;color:#172e3c;background:#f6f6ef;--ink:#172e3c;--green:#bff3bd;--line:#ccd3c9}
+body{margin:0}main{width:min(100% - 40px,1080px);margin:0 auto;padding-bottom:28px}
+header,.row,.foot,.step,.brand{display:flex;align-items:center;gap:12px}
+header{justify-content:space-between;border-bottom:1px solid var(--line);padding:22px 0}
+.brand{font-weight:750}.logo{width:39px;height:39px;border-radius:12px;background:var(--ink);display:grid;place-items:center;color:var(--green);font:30px/1 Arial}
+h1{font-size:clamp(1.1rem,3vw,1.6rem);line-height:1.1;letter-spacing:-.04em;margin:0}
+.meta,.eyebrow,.num,.rail{font:700 .8rem/1.4 Consolas,monospace;letter-spacing:.06em}
+.meta{padding:8px 13px;border:1px solid var(--line);border-radius:25px;white-space:nowrap}
+.round{display:flex;align-items:center;justify-content:space-between;gap:20px;margin:25px 0 16px}
+.rail{display:flex;gap:5px;width:min(42%,235px)}.rail i{height:7px;border-radius:4px;flex:1;background:#d8ded3}.rail .current{background:#457f67}.rail .done{background:#84cb92}
+.sheet{background:white;border:1px solid var(--line);border-radius:23px;padding:clamp(16px,3.2vw,38px);box-shadow:0 5px 0 #e5e8df}
+.profile{display:flex;align-items:center;flex-wrap:wrap;gap:8px 16px;background:#edf8ef;border-radius:12px;padding:12px 16px;margin-bottom:18px}.profile strong{font-size:1.12rem}.profile span{font-size:.92rem}.quiz{display:grid;grid-template-columns:minmax(190px,.85fr) minmax(0,1.5fr);gap:clamp(20px,5vw,68px);align-items:center}
+.tile{min-height:290px;position:relative;isolation:isolate;overflow:hidden;background-color:var(--green);background-image:radial-gradient(#80bc892e 1.5px,transparent 1.5px);background-size:13px 13px;border-radius:17px;padding:22px;display:flex;flex-direction:column;justify-content:space-between}
+.tile:after,.tile:before{content:"";position:absolute;z-index:-1;width:220px;height:100px;border:2px solid #75b98b77;border-radius:50%;transform:rotate(-33deg);bottom:-20px;right:-90px}.tile:before{transform:rotate(40deg)}
+.symbol{font-size:clamp(5rem,10vw,7.6rem);letter-spacing:-.07em;font-weight:750;line-height:1;text-align:center}.tile small{min-height:24px;font-weight:650;text-align:center}
+.num{display:inline-grid;place-items:center;background:#eadfff;color:#543e85;width:32px;height:32px;border-radius:50%}.step{color:#56626a;font-size:.88rem;font-weight:650}
+h2{font-size:clamp(1.5rem,3.8vw,2.65rem);line-height:1.1;letter-spacing:-.045em;margin:16px 0 23px}p{margin:8px 0 14px}button,input{font:inherit}button{cursor:pointer}
+input{padding:12px 15px;border:1.5px solid #94a39b;border-radius:10px;min-width:0;width:100%;color:var(--ink);background:#fcfdfb}
+button.action{background:var(--ink);color:white;padding:13px 23px;border:0;border-radius:10px;font-weight:650;min-height:46px}
+button:hover{filter:brightness(1.13)}:focus-visible{outline:3px solid #8756ca;outline-offset:3px}
+.feedback{min-height:1.45em;color:#8d3327;margin:8px 0 0;font-size:.94rem}
+.confirmed input{background:#d6f5dc;border-color:#328152;transition:background-color .18s ease-out}
+.confirmed .feedback{color:#22653e;font-weight:650}
+@media(prefers-reduced-motion:reduce){.confirmed input{transition:none}}
+.capacity{margin:10px 0;font-size:.9rem}.limits{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:5px 0}.limits span{text-align:center;border-radius:7px;background:#edf5ee;padding:5px 2px}
+.energy{background:#fff2cf;padding:10px 14px;border-radius:9px}
+.foot{margin-top:20px;color:#43545c;font-size:.9rem}.book{display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:#f7de9a;font-weight:750}
+.lab{display:grid;grid-template-columns:1.1fr 1fr;gap:22px;align-items:center}
+.diagram{background:#edf8ef;border-radius:16px;display:block;width:100%;max-height:430px;aspect-ratio:1;touch-action:manipulation}
+.bank{background:#edf0ff;border-radius:12px;padding:12px;margin:12px 0}.tokens{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));margin-top:8px}
+.token{display:grid;place-items:center;touch-action:none;background:transparent;border:0;padding:0;height:33px;min-width:0;color:white}
+.token span,.ghost{width:24px;height:24px;border-radius:50%;background:#5655ad;color:white;text-align:center;font:bold 20px/24px Arial}.token[aria-pressed=true] span{outline:3px solid #222e50;outline-offset:2px}.ghost{position:fixed;pointer-events:none;z-index:3;transform:translate(-50%,-50%)}
+.lab h2{font-size:clamp(1.4rem,3vw,2rem);margin:12px 0}.note{padding:12px 16px;border-left:4px solid #77bb84;background:#eff9ef;border-radius:4px}.results{font-size:1.15rem}.results strong{font-size:2rem}
+@media(max-width:700px){main{width:calc(100% - 24px)}.quiz{grid-template-columns:minmax(135px,.65fr) 1.5fr;gap:18px}.tile{padding:14px;min-height:225px}.row{flex-wrap:wrap}.lab{gap:12px}.tokens{grid-template-columns:repeat(6,1fr)}}
+@media(max-width:550px){.quiz,.lab{grid-template-columns:1fr}.tile{min-height:150px}.symbol{font-size:4.3rem}.diagram{max-height:300px}.meta{font-size:.68rem}header{gap:6px}.brand{gap:6px}.logo{width:30px;height:30px;font-size:23px}.round{margin:17px 0 12px}.tokens{grid-template-columns:repeat(8,1fr)}}
+</style>
+</head>
+<body><main>
+<header><div class="brand"><span class="logo" aria-hidden="true">⚛</span><h1>Energiestufenmodell</h1></div><span class="meta">NT · Klasse 8</span></header>
+<div class="round"><strong id="round"></strong><span class="rail" id="rail" aria-hidden="true"></span></div>
+<section class="sheet" id="sheet" aria-label="Quiz"></section>
+<div class="foot"><span class="book" aria-hidden="true">▤</span>Du kannst im Periodensystem (PSE) nachschauen.</div>
+</main>
+<script>
+'use strict';
+const elements = [
+ ['H','Wasserstoff',1,1],['He','Helium',2,8],['Li','Lithium',3,1],['Be','Beryllium',4,2],
+ ['B','Bor',5,3],['C','Kohlenstoff',6,4],['N','Stickstoff',7,5],['O','Sauerstoff',8,6],
+ ['F','Fluor',9,7],['Ne','Neon',10,8],['Na','Natrium',11,1],['Mg','Magnesium',12,2],
+ ['Al','Aluminium',13,3],['Si','Silicium',14,4,'Silizium'],['P','Phosphor',15,5],['S','Schwefel',16,6],
+ ['Cl','Chlor',17,7],['Ar','Argon',18,8],['K','Kalium',19,1],['Ca','Calcium',20,2,'Kalzium'],
+ ['Ga','Gallium',31,3],['Ge','Germanium',32,4],['As','Arsen',33,5],['Se','Selen',34,6],
+ ['Br','Brom',35,7],['Kr','Krypton',36,8]
+];
+// Besetzungsfolge im Grundzustand, mit der Schalennummer ab K = 0.
+const order = [[0,2],[1,8],[2,8],[3,2],[2,10],[3,6]].flatMap(([level,count])=>Array(count).fill(level));
+const names = ['K','L','M','N'];
+const boundaries = [25,58,91,124,157];
+const capacities = [2,8,18,32];
+const questions = ['Wie heißt dieses Element?','Zu welcher Hauptgruppe gehört es?','Welche Ordnungszahl hat es?','Baue das Schalenmodell.','Wie viele Valenzelektronen hat das Atom?'];
+const steps = ['Elementname','Hauptgruppe','Ordnungszahl','Schalenmodell','Valenzelektronen'];
+const $ = id=>document.getElementById(id);
+let deck, page, stage, placed, firstTry, missed, selected, drag;
+const element = ()=>deck[page];
+function counts(){const result=[0,0,0,0]; for(const shell of order.slice(0,placed)) result[shell]++; return result}
+function start(){
+ deck=elements.slice();
+ for(let i=deck.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[deck[i],deck[j]]=[deck[j],deck[i]]}
+ deck=deck.slice(0,10);page=0;firstTry=0;beginPage();
+}
+function beginPage(){stage=0;placed=0;selected=false;missed=false;render()}
+function stepLabel(){return '<div class="step"><span class="num">0'+(stage+1)+'</span>'+steps[stage]+'</div>'}
+const romanGroups=['I','II','III','IV','V','VI','VII','VIII'];
+function profile(){
+ const [symbol,name,z,group]=element();
+ const facts=[];
+ if(stage>=2)facts.push('Hauptgruppe: '+romanGroups[group-1]);
+ if(stage>=3)facts.push('Ordnungszahl: '+z);
+ if(stage>=5)facts.push('Valenzelektronen: '+counts().filter(Boolean).at(-1));
+ return '<aside class="profile" aria-label="Elementsteckbrief"><strong>'+symbol+' – '+name+'</strong>'+facts.map(fact=>'<span>'+fact+'</span>').join('')+'</aside>';
+}
+function render(){
+ const [symbol,name,z,group]=element();
+ $('round').textContent='Element '+(page+1)+' von 10';
+ $('rail').innerHTML=deck.map((_,i)=>'<i class="'+(i<page?'done':i===page?'current':'')+'"></i>').join('');
+ const tile='<div class="tile"><span class="eyebrow">ELEMENTSYMBOL</span><strong class="symbol">'+symbol+'</strong><small></small></div>';
+ if(stage===3 || stage===4 || stage===5){
+  $('sheet').innerHTML=profile()+'<div class="lab"><svg class="diagram" id="diagram" viewBox="0 0 320 320" aria-label="Schalenmodell von '+name+'"></svg><div id="panel"></div></div>';
+  draw();
+ }else if(stage>0) $('sheet').innerHTML=profile()+'<div id="panel"></div>';
+ else $('sheet').innerHTML='<div class="quiz">'+tile+'<div id="panel"></div></div>';
+ const panel=$('panel');
+ if(stage===3){
+  panel.innerHTML=stepLabel()+'<h2>Baue das Schalenmodell.</h2><p>Ziehe die Elektronen in die Schalen. Du kannst auch ein Elektron und dann die Schale antippen.</p><div class="capacity"><b>Maximale Elektronenzahl je Schale</b><div class="limits">'+names.map((n,i)=>'<span>'+n+' · <b>'+capacities[i]+'</b></span>').join('')+'</div></div><p class="energy" id="energy" role="status" hidden></p><div class="bank"><b id="stock"></b><div class="tokens" id="tokens"></div></div><div class="note">Beim neutralen Atom entspricht die Anzahl der Elektronen der Ordnungszahl.</div><p class="feedback" id="feedback" role="status"></p>';
+  stock();
+ }else if(stage===5){
+  const val=counts().filter(Boolean).at(-1);
+  panel.innerHTML='<div class="step"><span class="num">✓</span>Element abgeschlossen</div><h2>Dein fertiges Atommodell</h2><p class="note">'+(z===2?'Helium ist die Ausnahme. Es gehört zur 8. Hauptgruppe. Seine einzige Schale ist aber schon mit zwei Valenzelektronen voll. Wegen dieser vollen Außenschale verhält sich Helium chemisch ähnlich wie die anderen Edelgase. Deshalb gehört es trotz seiner nur zwei Valenzelektronen zur 8. Hauptgruppe.':'Die Nummer der Hauptgruppe entspricht der Anzahl der Valenzelektronen. '+name+' steht in der '+group+'. Hauptgruppe und hat '+val+' Valenzelektron'+(val===1?'':'en')+'.')+'</p><button class="action" id="next">'+(page===9?'Zur Auswertung':'Nächstes Element')+'</button>';
+  if(z>=19){
+   const explanation=document.createElement('p');
+   explanation.textContent=z<=20?'Nach acht Elektronen auf M beginnt die N-Schale. Der erste verfügbare Platz auf N liegt energetisch günstiger als die weiteren Plätze auf M.':'Nach acht Elektronen auf M kommen zuerst zwei auf N. Danach erhält M zehn weitere Elektronen, bevor sich N weiter füllt. Die Reihenfolge richtet sich nach der Energie der verfügbaren Plätze.';
+   panel.insertBefore(explanation,$('next'));
+  }
+  $('next').onclick=()=>{if(page===9)finish();else{page++;beginPage()}};
+ }else{
+  panel.innerHTML=stepLabel()+'<h2><label for="answer">'+questions[stage]+'</label></h2><form id="form"><div class="row"><input id="answer" required autocomplete="off" spellcheck="false" '+(stage?'inputmode="numeric"':'')+' placeholder="'+(stage===0?'Deutscher Elementname':'Deine Antwort')+'"><button class="action">Prüfen</button></div><p class="feedback" id="feedback" role="status"></p></form>';
+  $('form').onsubmit=event=>{
+   event.preventDefault();
+   const form=event.currentTarget;
+   if(form.classList.contains('confirmed'))return;
+   const value=$('answer').value.trim().toLowerCase();
+
+   const number=stage===1?group:stage===2?z:counts().filter(Boolean).at(-1);
+   const ok=stage===0?[name,element()[4]].some(n=>n?.toLowerCase()===value):value===String(number)||(stage===1 && value.toUpperCase()===romanGroups[group-1]);
+   if(!ok){missed=true;$('feedback').textContent='Das stimmt noch nicht. Versuche es erneut.';$('answer').select();return}
+   if(!missed)firstTry++;
+   missed=false;
+   form.classList.add('confirmed');
+   $('answer').readOnly=true;
+   form.querySelector('button').disabled=true;
+   $('feedback').textContent='✓ Richtig!';
+   setTimeout(()=>{stage++;render()},600);
+  };
+ }
+}
+function draw(){
+ const svg=$('diagram'), amounts=counts();
+ const visible=Math.max(amounts.findLastIndex(Boolean),stage===3?order[placed]:0);
+ let art='<title>'+element()[1]+' mit '+placed+' Elektronen</title>';
+ for(let i=visible;i>=0;i--){
+  const inner=boundaries[i],outer=boundaries[i+1],r=(inner+outer)/2;
+  art+='<g data-shell="'+i+'" '+(stage===3?'tabindex="0" role="button"':'role="img"')+' aria-label="'+names[i]+'-Schale, '+amounts[i]+' Elektronen"><circle cx="160" cy="160" r="'+r+'" fill="none" stroke="'+(i%2?'#e1f0e8':'#f1f9f1')+'" stroke-width="'+(outer-inner)+'"/><circle cx="160" cy="160" r="'+outer+'" fill="none" stroke="#598070"/><text x="160" y="'+(164-r)+'" text-anchor="middle" fill="#294e40" font-size="13" font-weight="bold">'+names[i]+'</text>';
+  for(let j=0;j<amounts[i];j++){
+   const angle=(j+.5)*2*Math.PI/amounts[i],x=160+r*Math.sin(angle),y=160-r*Math.cos(angle);
+   art+='<circle cx="'+x+'" cy="'+y+'" r="6" fill="#5655ad"/><path d="M'+(x-3)+' '+y+'h6" stroke="white" stroke-width="1.5"/>';
+  }
+  art+='</g>';
+ }
+ svg.innerHTML=art+'<circle cx="160" cy="160" r="'+boundaries[0]+'" fill="none" stroke="#598070"/><circle cx="160" cy="160" r="20" fill="#ba4142"/><text x="160" y="166" text-anchor="middle" font-size="16" font-weight="bold" fill="white">'+element()[2]+'+</text>';
+}
+function stock(){
+ const explanations={
+  18:'M enthält 8 von 18 möglichen Elektronen. Jetzt beginnt N, weil ihre ersten beiden Plätze energetisch günstiger liegen als die noch freien Plätze auf M.',
+  20:'N enthält jetzt zwei Elektronen. Die nächsten freien Plätze auf M sind energetisch günstiger als die übrigen Plätze auf N. Deshalb wird M weiter gefüllt.',
+  30:'M ist jetzt mit 18 Elektronen voll. Das nächste Elektron kommt wieder in die äußere N-Schale.'
+ };
+ if(explanations[placed]){
+  $('energy').hidden=false;
+  $('energy').textContent=explanations[placed];
+ }
+ const remaining=element()[2]-placed;
+ $('stock').textContent='Elektronenvorrat · '+remaining;
+ $('tokens').innerHTML=Array.from({length:remaining},(_,i)=>'<button class="token" aria-pressed="false" aria-label="Elektron '+(i+1)+' auswählen"><span>−</span></button>').join('');
+}
+function place(shell){
+ if(stage!==3)return;
+ if(shell!==order[placed]){$('feedback').textContent='Dieses Elektron gehört auf eine andere Schale.';return}
+ placed++;selected=false;
+ if(placed===element()[2]){stage++;render();return}
+ draw();stock();$('feedback').textContent='';
+}
+function selectToken(button){
+ document.querySelectorAll('.token[aria-pressed="true"]').forEach(b=>b.setAttribute('aria-pressed','false'));
+ button.setAttribute('aria-pressed','true');selected=true;
+}
+$('sheet').addEventListener('pointerdown',e=>{
+ const button=e.target.closest('.token');if(!button||drag||e.button!==0)return;
+ button.setPointerCapture(e.pointerId);
+ drag={id:e.pointerId,x:e.clientX,y:e.clientY,button,ghost:null};
+});
+$('sheet').addEventListener('pointermove',e=>{
+ if(!drag||drag.id!==e.pointerId)return;
+ if(!drag.ghost && Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>5){
+  selectToken(drag.button);drag.ghost=document.createElement('span');drag.ghost.className='ghost';drag.ghost.textContent='−';document.body.append(drag.ghost);
+ }
+ if(drag.ghost){drag.ghost.style.left=e.clientX+'px';drag.ghost.style.top=e.clientY+'px'}
+});
+$('sheet').addEventListener('pointerup',e=>{
+ if(!drag||drag.id!==e.pointerId)return;
+ const moving=drag;drag=null;
+ if(!moving.ghost)return;
+ moving.ghost.remove();
+ const ring=document.elementFromPoint(e.clientX,e.clientY)?.closest('[data-shell]');
+ if(ring)place(Number(ring.dataset.shell));
+ else $('feedback').textContent='Lege das Elektron zwischen zwei Kreislinien ab.';
+});
+$('sheet').addEventListener('pointercancel',()=>{drag?.ghost?.remove();drag=null});
+function activate(e){
+ if(stage!==3)return;
+ const token=e.target.closest('.token'),ring=e.target.closest('[data-shell]');
+ if(token)selectToken(token);
+ if(ring){if(selected)place(Number(ring.dataset.shell));else $('feedback').textContent='Wähle zuerst ein Elektron aus dem Vorrat.'}
+}
+$('sheet').addEventListener('click',activate);
+$('sheet').addEventListener('keydown',e=>{if(e.target.closest('[data-shell]')&&['Enter',' '].includes(e.key)){e.preventDefault();activate(e)}});
+function finish(){
+ $('round').textContent='10 von 10 Elementen abgeschlossen';$('rail').innerHTML='<i class="done"></i>'.repeat(10);
+ $('sheet').innerHTML='<div class="results"><span class="eyebrow">AUSWERTUNG</span><h2>Alle zehn Atome aufgebaut!</h2><p><strong>'+firstTry+' von 40</strong><br>Wissensfragen beim ersten Versuch richtig beantwortet.</p><p>'+deck.map(e=>e[0]).join(' · ')+'</p><button class="action" id="restart">Neues Quiz starten</button></div>';
+ $('restart').onclick=start;
+}
+start();
+</script></body></html>
