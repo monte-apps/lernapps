@@ -61,14 +61,14 @@ function climate(){
  return [s.t>=73?-1:warmth,s.w<=3?-1:cap(s.w/48,.1,1),s.f<=2?-1:cap(s.f/42,.1,1)];
 }
 function period(values){return values.some(v=>v<0)?Infinity:2.65/values.reduce((a,b)=>a*b,1)}
-function finish(){
- const title=Math.floor(s.n)>10000?'Herzlichen Glückwunsch! Du hast über 10.000 Bakterien gezüchtet!':'Die Minute ist um';
+function finish(extinct){
+ const title=extinct?'Die letzte Bakterienzelle ist abgestorben':Math.floor(s.n)>10000?'Herzlichen Glückwunsch! Du hast über 10.000 Bakterien gezüchtet!':'Die Minute ist um';
  s.state='done';el('endTitle').textContent=title;el('summary').textContent='Endbestand: '+fmt(s.n)+' Bakterien. Höchster Bestand: '+fmt(s.peak)+'.';
  const risks=s.hazards.some(x=>x>0)?s.hazards:s.limits;
  const worst=risks.indexOf(Math.max(...risks));
  el('lesson').textContent=['Die Temperatur hat deine Kultur am stärksten beeinflusst. Kühle bremst die Teilung, starke Hitze schädigt Zellen. Die Platte reagiert allmählich.','Feuchtigkeit war der wichtigste Engpass. Auf der warmen Platte verdunstet Wasser schneller. Ein geschlossener Deckel hält mehr davon in der Schale.','Nährstoffe waren der wichtigste Engpass. Bei vielen Zellen sinkt der Vorrat schneller, weil mehr Zellen gleichzeitig Nahrung verbrauchen.'][worst];
  if(!s.peak)el('lesson').textContent='Die Schale blieb leer. Setze die Startzelle während der Runde ein, damit eine Population wachsen kann.';
- el('result').showModal();paint();
+ move=null;draw(1,last);el('result').showModal();paint();
 }
 function advance(dt){
  dt=Math.min(dt,s.remaining);
@@ -77,14 +77,20 @@ function advance(dt){
 
  s.remaining=Math.max(0,s.remaining-dt);
  if(s.n)advanceCulture(dt);
- if(s.remaining===0)finish();
+ const extinct=s.peak>0&&s.n===0;
+ if(extinct||s.remaining===0)finish(extinct);
 }
 function advanceCulture(dt){
- s.f=cap(s.f-dt*(.25+s.n*.00085),0,100);
+ s.f=cap(s.f-dt*(.20+s.n*.00068),0,100);
  const v=climate(),p=period(v);
  v.forEach((value,i)=>{s.limits[i]+=dt*(1-value);if(value<0)s.hazards[i]+=dt});
  if(isFinite(p)){s.stress=0;s.generation+=dt/p;s.n*=2**(dt/p)}
- else{s.stress+=dt;s.n=Math.max(1,s.n*Math.exp(-dt*.85));if(s.n<2&&s.stress>1.8)s.n=0}
+ else{
+  const stressStep=v[0]<0||v[1]<0?dt:dt*.5;
+  s.stress+=stressStep;
+  s.n=Math.max(1,s.n*Math.exp(-stressStep*.85));
+  if(s.n<2&&s.stress>1.8)s.n=0;
+ }
  s.peak=Math.max(s.peak,s.n);
 }
 const names={seed:'Startzelle eingesetzt.',water:'Wasser zugegeben.',food:'Nährstoffe zugegeben.',heat:'Wärmeplatte umgeschaltet.',lid:'Deckel bewegt.'};
